@@ -21,11 +21,26 @@ const fetchArduinoData = async () => {
     return [];
   }
 };
+const updateAirQualitySummary = (latest) => {
+  const co2 = latest.sensors.co2?.value;
+  const co = latest.sensors.co?.value;
+
+  let summary = "Unknown";
+  if (co2 < 700 && co < 3) summary = "Good 🌿";
+  else if (co2 < 1000 && co < 5) summary = "Fair ⚠️";
+  else summary = "Poor 🛑";
+
+  document.getElementById("airQualitySummary").textContent = summary;
+};
+
 const updateHeaderValues = async () => {
   const data = await fetchArduinoData();
   if (!data.length) return;
 
   const latest = data[data.length - 1];
+
+  updateAirQualitySummary(latest);
+
   document.getElementById("temperature").textContent =
     latest.sensors.temperature?.value?.toFixed(1) + "°C" || "N/A";
 
@@ -35,7 +50,7 @@ const updateHeaderValues = async () => {
   const motionDetected = latest.sensors.motion?.value;
   document.getElementById("motionStatus").innerHTML = motionDetected
     ? '<span class="text-green-500">Détecté</span>'
-    : '<span class="text-red-500">Non détecté</span>';
+    : '<span class="text-red-500">Not detected</span>';
 };
 
 const updateTemperatureChart = async () => {
@@ -79,6 +94,32 @@ const updateCO2Chart = async () => {
   co2Chart.data.datasets[0].data = co2Values;
   co2Chart.update();
 };
+document.addEventListener("DOMContentLoaded", function () {
+  const cloudsContainer = document.querySelector(".clouds");
+
+  function createCloud() {
+    const cloud = document.createElement("div");
+    cloud.classList.add("cloud");
+
+    const width = Math.random() * (300 - 150) + 150;
+    const height = width * 0.6;
+    cloud.style.width = `${width}px`;
+    cloud.style.height = `${height}px`;
+
+    const top = Math.random() * window.innerHeight; 
+    const left = Math.random() * window.innerWidth; 
+    cloud.style.top = `${top}px`;
+    cloud.style.left = `${left}px`;
+
+    const animationDuration = Math.random() * (100 - 60) + 60; 
+    cloud.style.animationDuration = `${animationDuration}s`;
+
+    cloudsContainer.appendChild(cloud);
+  }
+  for (let i = 0; i < 30; i++) {
+    createCloud();
+  }
+});
 
 const tempChart = new Chart(document.getElementById("tempChart"), {
   type: "line",
@@ -146,12 +187,12 @@ const coChart = new Chart(document.getElementById("coChart"), {
         backgroundColor: "rgba(220, 53, 69, 0.1)",
         borderWidth: 2,
         borderDash: [5, 5],
-        fill: "+1", 
-        pointStyle: false, 
+        fill: "+1",
+        pointStyle: false,
       },
       {
         label: "Normal Level CO max",
-        data: Array(10).fill(3), 
+        data: Array(10).fill(3),
         borderColor: "rgba(25, 135, 84, 0.8)",
         backgroundColor: "rgba(25, 135, 84, 0.1)",
         borderWidth: 2,
@@ -166,7 +207,7 @@ const coChart = new Chart(document.getElementById("coChart"), {
     scales: {
       y: {
         beginAtZero: true,
-        suggestedMax: 10, 
+        suggestedMax: 10,
       },
     },
     plugins: {
@@ -230,8 +271,8 @@ const co2Chart = new Chart(document.getElementById("co2Chart"), {
       },
       {
         label: "Warning level CO₂",
-        data: Array(10).fill(1000), 
-        borderColor: "rgba(220, 53, 69, 0.8)", 
+        data: Array(10).fill(1000),
+        borderColor: "rgba(220, 53, 69, 0.8)",
         backgroundColor: "rgba(220, 53, 69, 0.1)",
         borderWidth: 2,
         borderDash: [5, 5],
@@ -240,8 +281,8 @@ const co2Chart = new Chart(document.getElementById("co2Chart"), {
       },
       {
         label: "Normal CO₂ Level max",
-        data: Array(10).fill(700), 
-        borderColor: "rgba(255, 193, 7, 0.8)", 
+        data: Array(10).fill(700),
+        borderColor: "rgba(255, 193, 7, 0.8)",
         backgroundColor: "rgba(255, 193, 7, 0.1)",
         borderWidth: 2,
         borderDash: [5, 5],
@@ -250,7 +291,7 @@ const co2Chart = new Chart(document.getElementById("co2Chart"), {
       },
       {
         label: "Niveau idéal CO₂",
-        data: Array(10).fill(400), 
+        data: Array(10).fill(400),
         borderColor: "rgba(25, 135, 84, 0.8)",
         backgroundColor: "rgba(25, 135, 84, 0.1)",
         borderWidth: 2,
@@ -265,8 +306,8 @@ const co2Chart = new Chart(document.getElementById("co2Chart"), {
     scales: {
       y: {
         beginAtZero: false,
-        suggestedMin: 300, 
-        suggestedMax: 1200, 
+        suggestedMin: 300,
+        suggestedMax: 1200,
       },
     },
     plugins: {
