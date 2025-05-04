@@ -12,9 +12,10 @@ const formatTimestamp = (ts) => {
 
 const fetchArduinoData = async () => {
   try {
-    const response = await fetch("http://10.74.254.206:5000/arduino/getData");
+    const response = await fetch("http://192.168.15.63:5000/arduino/getData");
     if (!response.ok) throw new Error("Erreur réseau : " + response.statusText);
     const data = await response.json();
+    console.log(data);
     return data;
   } catch (error) {
     console.error("Erreur de récupération des données :", error);
@@ -51,6 +52,61 @@ const updateHeaderValues = async () => {
   document.getElementById("motionStatus").innerHTML = motionDetected
     ? '<span class="text-green-500">Détecté</span>'
     : '<span class="text-red-500">Not detected</span>';
+};
+const generateEnvironmentAdvice = (latest) => {
+  const co2 = latest.sensors.co2?.value;
+  const humidity = latest.sensors.humidity?.value;
+  const temperature = latest.sensors.temperature?.value;
+  const co = latest.sensors.co?.value;
+  const advice = [];
+
+  if (co2 > 1000) {
+    advice.push(
+      "⚠️ High CO₂ levels detected. Please ventilate the room by opening windows or using an air purifier."
+    );
+  } else if (co2 > 700) {
+    advice.push("⚠️ CO₂ is slightly elevated. Consider airing out the space.");
+  }
+
+  if (humidity > 70) {
+    advice.push(
+      "💧 High humidity may lead to mold. Use a dehumidifier or ventilate more frequently."
+    );
+  } else if (humidity < 30) {
+    advice.push(
+      "🏜️ Low humidity detected. You might want to use a humidifier to improve comfort."
+    );
+  }
+
+  if (temperature > 27) {
+    advice.push(
+      "🔥 Temperature is high. Consider cooling options or improving airflow."
+    );
+  } else if (temperature < 18) {
+    advice.push(
+      "❄️ Temperature is low. Consider heating or insulating the room better."
+    );
+  }
+
+  if (co > 2) {
+    advice.push(
+      "🚨 High CO levels detected! Please ensure proper ventilation and check for gas leaks immediately."
+    );
+  }
+
+  const adviceList = document.getElementById("adviceList");
+  adviceList.innerHTML = ""; // Clear previous
+
+  if (advice.length === 0) {
+    adviceList.innerHTML =
+      "<li>✅ No advice needed. Your environment looks healthy! 🎉</li>";
+  } else {
+    advice.forEach((tip) => {
+      const li = document.createElement("li");
+      li.innerHTML = tip; // Using innerHTML to render emojis
+      adviceList.appendChild(li);
+    });
+  }
 };
 
 const updateTemperatureChart = async () => {
@@ -94,7 +150,7 @@ const updateCO2Chart = async () => {
   co2Chart.data.datasets[0].data = co2Values;
   co2Chart.update();
 };
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   const cloudsContainer = document.querySelector(".clouds");
 
   function createCloud() {
@@ -106,19 +162,30 @@ document.addEventListener("DOMContentLoaded", function () {
     cloud.style.width = `${width}px`;
     cloud.style.height = `${height}px`;
 
-    const top = Math.random() * window.innerHeight; 
-    const left = Math.random() * window.innerWidth; 
+    const top = Math.random() * window.innerHeight;
+    const left = Math.random() * window.innerWidth;
     cloud.style.top = `${top}px`;
     cloud.style.left = `${left}px`;
 
-    const animationDuration = Math.random() * (100 - 60) + 60; 
+    const animationDuration = Math.random() * (100 - 60) + 60;
     cloud.style.animationDuration = `${animationDuration}s`;
 
     cloudsContainer.appendChild(cloud);
   }
+
   for (let i = 0; i < 30; i++) {
     createCloud();
   }
+
+  refreshAllCharts();
+
+  const data = await fetchArduinoData();
+  if (data.length) {
+    const latest = data[data.length - 1];
+    generateEnvironmentAdvice(latest);
+  }
+
+  setInterval(refreshAllCharts, 35000);
 });
 
 const tempChart = new Chart(document.getElementById("tempChart"), {
@@ -395,6 +462,3 @@ const refreshAllCharts = () => {
   updateCO2Chart();
   updateHeaderValues();
 };
-
-refreshAllCharts();
-setInterval(refreshAllCharts, 35000);
