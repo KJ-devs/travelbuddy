@@ -1,0 +1,26 @@
+{
+    "device_id": "esp32_air_monitor_1",
+    "sensors": {
+        "humidity": {
+            "value": 34.6,
+            "unit": "%"
+        },
+        "co": {
+            "value": 1.54,
+            "unit": "ppm"
+        },
+        "temperature": {
+            "value": 29.5,
+            "unit": "C"
+        },
+        "co2": {
+            "value": 111,
+            "unit": "ppm"
+        }
+    },
+    "air_quality": {
+        "description": "TRES BONNE",
+        "score": 87
+    },
+    "timestamp": 799609295
+}

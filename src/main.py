@@ -3,8 +3,10 @@ import json
 import datetime
 import os
 import socket
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # Créer un dossier pour stocker les données
 data_folder = "air_quality_data"
@@ -83,7 +85,20 @@ def receive_data():
         }), 500
 
 
-# 🚀 Démarrage du serveur
+@app.route("/arduino/getData", methods=["GET"])
+def get_data():
+    all_data = []
+    for filename in sorted(os.listdir(data_folder)):
+        if filename.endswith(".json"):
+            with open(os.path.join(data_folder, filename), "r") as f:
+                try:
+                    all_data.append(json.load(f))
+                except Exception as e:
+                    print(f"Invalid JSON in {filename}: {e}")
+    return jsonify(all_data)
+
+
+
 if __name__ == '__main__':
     local_ip = get_local_ip()
     print("\n" + "="*50)
