@@ -1,14 +1,15 @@
-const formatTimestamp = (ts) => {
-  if (String(ts).length === 10) ts *= 1000;
-  const date = new Date(ts);
-  return date.toLocaleString("fr-FR", {
-    timeZone: "Europe/Paris",
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-};
+function formatTimestamp(timestamp) {
+  if (timestamp < 1e12) {
+    timestamp *= 1000;
+  }
+
+  const date = new Date(timestamp);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${hours}:${minutes}:${seconds}`;
+}
 
 const fetchArduinoData = async () => {
   try {
@@ -50,8 +51,8 @@ const updateHeaderValues = async () => {
 
   const motionDetected = latest.sensors.motion?.value;
   document.getElementById("motionStatus").innerHTML = motionDetected
-    ? '<span class="text-green-500">Détecté</span>'
-    : '<span class="text-red-500">Not detected</span>';
+    ? '<span class="text-green-500">Connected</span>'
+    : '<span class="text-red-500">Disconnected</span>';
 };
 const generateEnvironmentAdvice = (latest) => {
   const co2 = latest.sensors.co2?.value;
@@ -88,7 +89,7 @@ const generateEnvironmentAdvice = (latest) => {
     );
   }
 
-  if (co > 2) {
+  if (co > 5) {
     advice.push(
       "🚨 High CO levels detected! Please ensure proper ventilation and check for gas leaks immediately."
     );
